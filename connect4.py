@@ -22,7 +22,7 @@ PLAYER_PIECE = 1
 AI_PIECE = 2
 
 # Number of spaces AI needs to check
-WINDOW_LENGTH = 4
+WINNING_LENGTH = 4
 
 # Controlling how deep into the minmax tree the AI checks
 # Needs to be > 0
@@ -108,26 +108,26 @@ def score_position(board, piece):
     for r in range(ROW_COUNT):
         row_array = [int(i) for i in list(board[r,:])]
         for c in range(COLUMN_COUNT-3):
-            window = row_array[c:c+WINDOW_LENGTH]
+            window = row_array[c:c+WINNING_LENGTH]
             score += evaluate_window(window, piece)
 
     # Vertical score
     for c in range(COLUMN_COUNT):
         col_array = [int(i) for i in list(board[:,c])]
         for r in range(ROW_COUNT-3):
-            window = col_array[r:r+WINDOW_LENGTH]
+            window = col_array[r:r+WINNING_LENGTH]
             score += evaluate_window(window, piece)
 
     # Positive sloped diagonal score
     for r in range(ROW_COUNT-3):
         for c in range(COLUMN_COUNT-3):
-            window = [board[r+i][c+i] for i in range(WINDOW_LENGTH)]
+            window = [board[r+i][c+i] for i in range(WINNING_LENGTH)]
             score += evaluate_window(window, piece)
 
     # Negatively sloped diagonal score
     for r in range(ROW_COUNT-3):
         for c in range(COLUMN_COUNT-3):
-            window = [board[r+3-i][c+i] for i in range(WINDOW_LENGTH)]
+            window = [board[r+3-i][c+i] for i in range(WINNING_LENGTH)]
             score += evaluate_window(window, piece)
 
     return score
