@@ -28,9 +28,9 @@ class TestConnectFour(unittest.TestCase):
         self.assertTrue(winning_move(self.board, 1))
 
     def test_get_next_open_row(self):
-        drop_piece(self.board, 5, 0, 1)  # Fill row 5 (bottom row)
-        drop_piece(self.board, 4, 0, 1)  # Fill row 4
-        self.assertEqual(get_next_open_row(self.board, 0), 3)
+        drop_piece(self.board, 2, 0, 1)
+        drop_piece(self.board, 2, 1, 1)
+        self.assertEqual(get_next_open_row(self.board, 1), 3)
 
 if __name__ == '__main__':
     unittest.main()

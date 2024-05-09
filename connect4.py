@@ -37,6 +37,22 @@ def create_board():
 def drop_piece(board, row, col, piece):
     board[row][col] = piece
 
+def animate_move(board, row, col, piece):
+    xposition = int(col*SQUARESIZE + SQUARESIZE/2)
+    yposition = int(SQUARESIZE/2)
+    COLOR = RED
+    if piece == 2:
+        COLOR = YELLOW
+    yspeed = .2
+    while yposition < (HEIGHT-row*SQUARESIZE-SQUARESIZE/2):
+        yspeed += .2
+        yposition += yspeed
+        pygame.draw.rect(screen, BLACK, (0,0, WIDTH, SQUARESIZE))
+        draw_board(board)
+        pygame.draw.circle(screen, COLOR, (xposition, int(yposition)), RADIUS)
+        pygame.display.update()
+    return True
+
 # Checking if location is a 0 which means that it is still empty
 def is_valid_location(board, col):
     return board[ROW_COUNT-1][col] == 0
@@ -261,6 +277,7 @@ while not game_over:
 
                 if is_valid_location(board, col):
                     row = get_next_open_row(board, col)
+                    animate_move(board, row, col, 1)
                     drop_piece(board, row, col, PLAYER_PIECE)
 
                     if winning_move(board, PLAYER_PIECE):
@@ -281,6 +298,7 @@ while not game_over:
         if is_valid_location(board, col):
             pygame.time.wait(500)
             row = get_next_open_row(board, col)
+            animate_move(board, row, col, 1)
             drop_piece(board, row, col, AI_PIECE)
 
             if winning_move(board, AI_PIECE):
