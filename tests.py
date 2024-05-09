@@ -27,6 +27,7 @@ class TestConnectFour(unittest.TestCase):
         drop_piece(self.board, 5, 3, 1)
         self.assertTrue(winning_move(self.board, 1))
 
+    # Doesn't work. Don't know why
     def test_get_next_open_row(self):
         drop_piece(self.board, 2, 0, 1)
         drop_piece(self.board, 2, 1, 1)
