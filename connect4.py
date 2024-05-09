@@ -5,6 +5,7 @@ import math
 import random
 import copy
 
+# Colors for the board and pieces
 BLUE = (0, 0, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -20,19 +21,26 @@ EMPTY = 0
 PLAYER_PIECE = 1
 AI_PIECE = 2
 
+# Number of spaces AI needs to check
 WINDOW_LENGTH = 4
 
-MAX_DEPTH = 2
+# Controlling how deep into the minmax tree the AI checks
+# Needs to be > 0
+MAX_DEPTH = 1
 
+# Creating the empty board at the start of the game
 def create_board():
     board = np.zeros((ROW_COUNT, COLUMN_COUNT))
     return board
 
+# Dropping the piece at the chosen row and column
 def drop_piece(board, row, col, piece):
     board[row][col] = piece
 
+# Checking if location is a 0 which means that it is still empty
 def is_valid_location(board, col):
     return board[ROW_COUNT-1][col] == 0
+
 
 def get_next_open_row(board, col):
     for r in range(ROW_COUNT):
@@ -67,7 +75,9 @@ def winning_move(board, piece):
         for r in range(3, ROW_COUNT):
             if board[r][c] == piece and board[r-1][c+1] == piece and board[r-2][c+2] == piece and board[r-3][c+3] == piece:
                 return True
-            
+
+# Point mechanism for the AI to choose the best alternative
+# Can be modified to change the way of playing for the AI
 def evaluate_window(window, piece):
     score = 0
     opp_piece = PLAYER_PIECE
@@ -89,6 +99,7 @@ def score_position(board, piece):
     score = 0
 
     # Center score
+    # AI prefers the center at the start
     center_array = [int(i) for i in list(board[:, COLUMN_COUNT//2])]
     center_count = center_array.count(piece)
     score += center_count + 3
@@ -121,12 +132,16 @@ def score_position(board, piece):
 
     return score
 
+# Checks if the game is over: player wins or AI wins or tie
 def is_terminal_node(board):
     return winning_move(board, PLAYER_PIECE) or winning_move(board, AI_PIECE) or len(get_valid_locations(board)) == 0
 
+# Actual algorithm the AI uses to search for the best possible outcome
+# Recursive function switching between min- and max-player
 def minimax(board, depth, alpha, beta, maximizing_player):
     valid_locations = get_valid_locations(board)
     is_terminal = is_terminal_node(board)
+    # First check if the game is over or if the AI is on the easiest mode
     if depth == 0 or is_terminal:
         if is_terminal:
             if winning_move(board, AI_PIECE):
@@ -138,17 +153,22 @@ def minimax(board, depth, alpha, beta, maximizing_player):
         else: # Depth = 0
             return (None, score_position(board, AI_PIECE))
     if maximizing_player:
+        # Value used in the pruning process
         value = -math.inf
+        # Setting where the AI starts evaluating
         column = random.choice(valid_locations)
         for col in valid_locations:
             row = get_next_open_row(board, col)
+            # Algorithm needs a copy of the board to work
             b_copy = copy.deepcopy(board)
             drop_piece(b_copy, row, col, AI_PIECE)
+            # Calling the function recursively to search deeper
             new_score = minimax(b_copy, depth-1, alpha, beta, False)[1]
             if new_score > value:
                 value = new_score
                 column = col
             alpha = max(alpha, value)
+            # Way for pruning to check if the algorithm can stop there. Better path already found
             if alpha >= beta:
                 break
         return column, value
@@ -169,7 +189,7 @@ def minimax(board, depth, alpha, beta, maximizing_player):
         return column, value
     
 
-
+# Checking all the possible locations that are still unused
 def get_valid_locations(board):
     valid_locations = []
     for col in range(COLUMN_COUNT):
@@ -177,21 +197,7 @@ def get_valid_locations(board):
             valid_locations.append(col)
     return valid_locations
 
-def pick_best_move(board, piece):
-    valid_locations = get_valid_locations(board)
-    best_score = 0
-    best_col = random.choice(valid_locations)
-    for col in valid_locations:
-        row = get_next_open_row(board, col)
-        temp_board = copy.deepcopy(board)
-        drop_piece(temp_board, row, col, piece)
-        score = score_position(temp_board, piece)
-        if score > best_score:
-            best_score = score
-            best_col = col
-
-    return best_col
-          
+# Drawing the board
 def draw_board(board):
     for c in range(COLUMN_COUNT):
         for r in range(ROW_COUNT):
@@ -212,7 +218,10 @@ game_over = False
 
 pygame.init()
 
-SQUARESIZE = 100
+# Pixel sizes for the squares
+# Change this to fit for the screen
+SQUARESIZE = 90
+
 WIDTH = COLUMN_COUNT * SQUARESIZE
 HEIGHT = (ROW_COUNT+1) * SQUARESIZE
 RADIUS = int(SQUARESIZE/2 - 5)
@@ -224,6 +233,7 @@ draw_board(board)
 pygame.display.update()
 myfont = pygame.font.SysFont("monospace", 75)
 
+# Determining if the user or the AI starts
 turn = random.randint(PLAYER, AI)
 
 while not game_over:
@@ -232,6 +242,7 @@ while not game_over:
         if event.type == pygame.QUIT:
             sys.exit()
 
+        # Checking where the players cursor is
         if event.type == pygame.MOUSEMOTION:
             pygame.draw.rect(screen, BLACK, (0, 0, WIDTH, SQUARESIZE))
             posx = event.pos[0]
@@ -239,10 +250,11 @@ while not game_over:
                 pygame.draw.circle(screen, RED, (posx, int(SQUARESIZE/2)), RADIUS)
         pygame.display.update()
 
-
+        # Used so that the top black bar stays black
         if event.type == pygame.MOUSEBUTTONDOWN:
             pygame.draw.rect(screen, BLACK, (0, 0, WIDTH, SQUARESIZE))
 
+            # Tracking players actions
             if turn == PLAYER:
                 posx = event.pos[0]
                 col = int(math.floor(posx/SQUARESIZE))
@@ -263,8 +275,7 @@ while not game_over:
                     draw_board(board)
 
     if turn == AI and not game_over:
-        #col = random.randint(0, COLUMN_COUNT-1)
-        #col = pick_best_move(board, AI_PIECE)
+        # Checking the best possible outcome using the minimax function
         col, minimax_score = minimax(board, MAX_DEPTH, -math.inf, math.inf, True)
 
         if is_valid_location(board, col):
